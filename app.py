@@ -28,25 +28,28 @@ def fetch_attendance(org_emp_code, attendance_date, batch_id):
 
 @app.route('/fetch-attendance', methods=['POST'])
 def fetch_attendance_endpoint():
-    data = request.json
-
-    # Extract input values
-    input_file = data.get("input_file")  # File with org_emp_codes
-    attendance_date = data.get("attendance_date")
-    batch_id = data.get("batch_id")
+    if 'file' not in request.files:
+        return jsonify({"error": "No file part in the request"}), 400
     
-    if not input_file or not attendance_date or not batch_id:
-        return jsonify({"error": "Missing required parameters"}), 400
-
+    file = request.files['file']
+    attendance_date = request.form.get("attendance_date")
+    batch_id = request.form.get("batch_id")
+    
+    if not attendance_date or not batch_id:
+        return jsonify({"error": "Missing required parameters: attendance_date or batch_id"}), 400
+    
     # Parse attendance_date for filename
     try:
         date_obj = datetime.strptime(attendance_date, "%Y-%m-%d")
         formatted_date = f"S4Carlisle_{date_obj.day:02d}_{date_obj.month:02d}_{str(date_obj.year)[-2:]}.xlsx"
     except ValueError:
         return jsonify({"error": "Invalid attendance_date format. Use YYYY-MM-DD."}), 400
-
-    # Read org_emp_codes from the file
-    org_emp_codes = input_file.splitlines()
+    
+    # Read org_emp_codes from the uploaded file
+    try:
+        org_emp_codes = [line.strip() for line in file.stream.read().decode('utf-8').splitlines()]
+    except Exception as e:
+        return jsonify({"error": f"Error reading file: {str(e)}"}), 400
 
     results = []
 
