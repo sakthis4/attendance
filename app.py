@@ -70,7 +70,7 @@ def fetch_attendance_endpoint():
                 "in_time": None,
                 "out_time": None
             })
-        time.sleep(0.5)  # Add delay between API calls
+        time.sleep(0.2)  # Add delay between API calls
 
     # Save to Excel
     df = pd.DataFrame(results)
